@@ -1,6 +1,8 @@
 import Header from '../../../components/Header'
 import OpinionColumn from '../../../components/OpinionColumn'
 import VoteBox from '../../../components/VoteBox'
+import AIInsights from '../../../components/AIInsights'
+import TransText from '../../../components/TransText'
 import { headers } from 'next/headers'
 
 async function getData(slug: string){
@@ -16,7 +18,12 @@ async function getData(slug: string){
 
 export default async function Page({ params }:{ params: { slug: string } }){
   const q = await getData(params.slug)
-  if (!q) return <main><Header /><div className="max-w-3xl mx-auto p-4">Not found.</div></main>
+  if (!q) return (
+    <main>
+      <Header />
+      <div className="max-w-3xl mx-auto p-4">Not found.</div>
+    </main>
+  )
 
   const forItems = (q.opinions || []).filter((o:any)=>o.side==='for')
   const againstItems = (q.opinions || []).filter((o:any)=>o.side==='against')
@@ -29,8 +36,17 @@ export default async function Page({ params }:{ params: { slug: string } }){
           <div className="text-sm text-neutral-500">
             {q.category} • {q.createdAt ? new Date(q.createdAt).toLocaleString() : (q.created_at ? new Date(q.created_at).toLocaleString() : '')}
           </div>
-          <h1 className="text-2xl font-semibold mt-1">{q.title}</h1>
+          <h1 className="text-2xl font-semibold mt-1">
+            <TransText as="span" text={q.title} showBadge />
+          </h1>
+
           <VoteBox questionId={q.id} initialFor={q.forCount ?? 0} initialAgainst={q.againstCount ?? 0} />
+
+          <AIInsights
+            forItems={forItems.map((o:any)=>({ text:o.text, up:o.up ?? 0 }))}
+            againstItems={againstItems.map((o:any)=>({ text:o.text, up:o.up ?? 0 }))}
+            auto
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

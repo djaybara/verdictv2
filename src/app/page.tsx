@@ -1,15 +1,7 @@
 import Header from '../components/Header'
 import QuestionCard from '../components/QuestionCard'
 import { headers } from 'next/headers'
-
-function totalVotes(q:any){ return (q.forCount ?? 0) + (q.againstCount ?? 0) }
-function createdAtOf(q:any){ return q.createdAt || q.created_at || q.created }
-function controversy(q:any){
-  const n = totalVotes(q)
-  if (n < 6) return -1 // on écarte les très faibles volumes
-  const p = (q.forCount ?? 0)/n
-  return 1 - Math.abs(p - 0.5) * 2 // 0..1 (1 = 50/50)
-}
+import { isTop, isTrending, isControversial, sortTop, sortTrending, sortControversial } from '../lib/flags'
 
 async function getQuestions(){
   const h = headers()
@@ -26,24 +18,23 @@ async function getQuestions(){
 export default async function Home({ searchParams }: any){
   const items = await getQuestions()
   const tab = searchParams?.tab || 'top'
-  const sorted = [...items].sort((a:any,b:any)=>{
-    if (tab==='trending') {
-      const ta = createdAtOf(a) ? new Date(createdAtOf(a)).getTime() : 0
-      const tb = createdAtOf(b) ? new Date(createdAtOf(b)).getTime() : 0
-      return tb - ta // plus récents d'abord
-    }
-    if (tab==='controversial') {
-      return controversy(b) - controversy(a) || totalVotes(b) - totalVotes(a)
-    }
-    // top par nb de votes
-    return totalVotes(b) - totalVotes(a)
-  })
+
+  let filtered:any[] = []
+  if (tab==='top') filtered = items.filter(isTop).sort(sortTop)
+  else if (tab==='trending') filtered = items.filter(isTrending).sort(sortTrending)
+  else if (tab==='controversial') filtered = items.filter(isControversial).sort(sortControversial)
+
+  // si aucun match, fallback : on montre tout trié de façon cohérente
+  if (filtered.length===0){
+    filtered = [...items].sort(tab==='trending' ? sortTrending : tab==='controversial' ? sortControversial : sortTop)
+  }
+
   return (
     <main>
       <Header />
       <div className="max-w-5xl mx-auto p-4 grid gap-4">
-        {sorted.map((q:any) => <QuestionCard key={q.id} q={q} />)}
-        {sorted.length===0 && <div className="text-neutral-500">No questions yet.</div>}
+        {filtered.map((q:any) => <QuestionCard key={q.id} q={q} />)}
+        {filtered.length===0 && <div className="text-neutral-500">No questions yet.</div>}
       </div>
     </main>
   )

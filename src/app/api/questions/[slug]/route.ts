@@ -31,16 +31,14 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
     `)
     const opinions = asRows(r2)
 
-    let replies: any[] = []
-    if (opinions.length) {
-      const ids = opinions.map((o:any)=>o.id)
-      const r3 = await db.execute(sql`
-        SELECT r.* FROM opinion_replies r
-        WHERE r.opinion_id = ANY(${sql.array(ids, 'uuid')})
-        ORDER BY r.created_at ASC;
-      `)
-      replies = asRows(r3)
-    }
+    const r3 = await db.execute(sql`
+      SELECT r.* FROM opinion_replies r
+      WHERE r.opinion_id IN (
+        SELECT o.id FROM opinions o WHERE o.question_id = ${q.id}
+      )
+      ORDER BY r.created_at ASC;
+    `)
+    const replies = asRows(r3)
 
     const replyMap = new Map<string, any[]>()
     for(const r of replies) {
