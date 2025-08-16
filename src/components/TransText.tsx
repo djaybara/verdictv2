@@ -1,23 +1,22 @@
 'use client'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 function hash(s:string){
-  // djb2
   let h=5381; for (let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i) }
   return (h>>>0).toString(36)
 }
 
 type Props = {
   text: string
-  as?: keyof JSX.IntrinsicElements
+  as?: React.ElementType   // ✅ évite JSX.IntrinsicElements
   className?: string
   showBadge?: boolean
 }
 
-export default function TransText({ text, as='div', className='', showBadge=false }:Props){
+export default function TransText({ text, as:As='div', className='', showBadge=false }:Props){
   const [t, setT] = useState<string>(text)
   const [loading, setLoading] = useState<boolean>(false)
-  const Tag:any = as
+  const Tag = As as React.ElementType
 
   useEffect(()=>{
     const lang = (typeof document!=='undefined' ? document.documentElement.lang : 'en') || 'en'

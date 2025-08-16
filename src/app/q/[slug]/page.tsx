@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Header from '../../../components/Header'
 import OpinionColumn from '../../../components/OpinionColumn'
 import VoteBox from '../../../components/VoteBox'

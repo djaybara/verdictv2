@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Header from '../components/Header'
 import QuestionCard from '../components/QuestionCard'
 import { headers } from 'next/headers'
